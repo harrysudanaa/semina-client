@@ -2,17 +2,19 @@ import React, { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import SBreadCrumb from "../../components/Breadcrumb";
 import SAlert from "../../components/Alert";
-import CategoryForm from "./form";
-import { useNavigate, useParams } from "react-router";
+import Form from "./form";
+import { useNavigate, useParams } from "react-router-dom";
+import { getData, putData } from "../../utils/fetch";
+import { useDispatch } from "react-redux";
+import { setNotif } from "../../redux/notif/actions";
 
 function CategoryEdit() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { categoryId } = useParams();
   const [form, setForm] = useState({
     name: "",
   });
-
-  console.log(categoryId);
 
   const [alert, setAlert] = useState({
     status: false,
@@ -27,8 +29,9 @@ function CategoryEdit() {
   };
 
   const fetchOneCategories = async () => {
-    // const res = await getData(`/cms/categories/${categoryId}`);
-    // setForm({ ...form, name: res.data.data.name });
+    const res = await getData(`/cms/categories/${categoryId}`);
+
+    setForm({ ...form, name: res.data.data.name });
   };
 
   useEffect(() => {
@@ -39,21 +42,26 @@ function CategoryEdit() {
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      // const res = await putData(`/cms/categories/${categoryId}`, form);
-
+      const res = await putData(`/cms/categories/${categoryId}`, form);
+      dispatch(
+        setNotif(
+          true,
+          "success",
+          `Berhasil ubah kategori ${res.data.data.name}`
+        )
+      );
       navigate("/categories");
       setIsLoading(false);
-    } catch (error) {
+    } catch (err) {
       setIsLoading(false);
       setAlert({
         ...alert,
         status: true,
         type: "danger",
-        message: error.response.data.msg,
+        message: err.data.data.msg,
       });
     }
   };
-
   return (
     <Container className="mt-3">
       <SBreadCrumb
@@ -62,7 +70,7 @@ function CategoryEdit() {
         textThird="Edit"
       />
       {alert.status && <SAlert type={alert.type} message={alert.message} />}
-      <CategoryForm
+      <Form
         edit
         form={form}
         isLoading={isLoading}
