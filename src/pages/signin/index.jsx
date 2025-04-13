@@ -1,13 +1,14 @@
 import { Card, Container } from "react-bootstrap";
 import { useState } from "react";
-import axios from "axios";
 import SAlert from "../../components/Alert";
-import { Navigate, useNavigate } from "react-router";
-import { config } from "../../configs";
+import { useNavigate } from "react-router";
 import SForm from "./form";
+import { useDispatch } from "react-redux";
+import { postData } from "../../utils/fetch";
+import { userLogin } from "../../redux/auth/actions";
 
 export default function SigninPage() {
-  const token = localStorage.getItem("token");
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form, setform] = useState({
     email: "",
@@ -29,11 +30,8 @@ export default function SigninPage() {
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.post(
-        `${config.api_host_dev}/cms/auth/signin`,
-        form
-      );
-      localStorage.setItem("token", res.data.data.token);
+      const res = await postData("/cms/auth/signin", form);
+      dispatch(userLogin(res.data.data.token, res.data.data.role));
       setIsLoading(false);
       navigate("/");
     } catch (error) {
@@ -45,8 +43,6 @@ export default function SigninPage() {
       });
     }
   };
-
-  if (token) return <Navigate to="/" replace={true} />;
 
   return (
     <Container md={12} className="my-5">

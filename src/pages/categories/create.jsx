@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { Container } from "react-bootstrap";
-import SBreadcrumb from "../../components/Breadcrumb";
+import SBreadCrumb from "../../components/Breadcrumb";
 import SAlert from "../../components/Alert";
 import Form from "./form";
-import { useNavigate } from "react-router";
-import axios from "axios";
-import { config } from "../../configs";
-import SNavbar from "../../components/Navbar";
+import { postData } from "../../utils/fetch";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setNotif } from "../../redux/notif/actions";
 
-export default function CategoryCreate() {
-  const token = localStorage.getItem("token");
+function CategoryCreate() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [form, setForm] = useState({
     name: "",
   });
@@ -30,41 +30,43 @@ export default function CategoryCreate() {
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      await axios.post(`${config.api_host_dev}/cms/categories`, form, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await postData("/cms/categories", form);
+      dispatch(
+        setNotif(
+          true,
+          "success",
+          `Berhasil tambah kategori ${res.data.data.name}`
+        )
+      );
       navigate("/categories");
       setIsLoading(false);
-    } catch (error) {
+    } catch (err) {
       setIsLoading(false);
       setAlert({
         ...alert,
         status: true,
         type: "danger",
-        message: error.response.data.msg,
+        message: err.data.data.msg,
       });
     }
   };
 
   return (
-    <>
-      <SNavbar />
-      <Container>
-        <SBreadcrumb
-          textSecond={"Categories"}
-          urlSecond={"/categories"}
-          textThird="Create"
-        />
-        {alert.status && <SAlert type={alert.type} message={alert.message} />}
-        <Form
-          form={form}
-          isLoading={isLoading}
-          handleChange={handleChange}
-          handleSubmit={handleSubmit}
-        />
-      </Container>
-    </>
+    <Container>
+      <SBreadCrumb
+        textSecound={"Categories"}
+        urlSecound={"/categories"}
+        textThird="Create"
+      />
+      {alert.status && <SAlert type={alert.type} message={alert.message} />}
+      <Form
+        form={form}
+        isLoading={isLoading}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+      />
+    </Container>
   );
 }
+
+export default CategoryCreate;
